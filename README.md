@@ -112,7 +112,8 @@ Weitere Details in der [Dokumentation](siocs_heizung/DOCS.md).
 | `dashboard_heizung.json` | fertiges Dashboard |
 | `INSTALL.md` | Kurzanleitung |
 | `siocs_heizung/CHANGELOG.md` | Änderungen |
+| `LICENSE` | MIT-Lizenz |
 
 ## Lizenz
 
-Es ist noch keine Lizenz festgelegt. Ohne Lizenz gilt das Urheberrecht des Autors; wenn andere den Code nutzen und ändern dürfen sollen, füge eine Lizenz (z. B. MIT) hinzu.
+[MIT-Lizenz](LICENSE), Copyright (c) 2026 Roland Friedl. Du darfst den Code nutzen, ändern und weitergeben; er wird ohne Gewähr bereitgestellt.
