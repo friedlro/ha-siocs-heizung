@@ -1,0 +1,219 @@
+{
+  "views": [
+    {
+      "title": "Heizung",
+      "path": "heizung",
+      "type": "sections",
+      "icon": "mdi:radiator",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Raum",
+              "icon": "mdi:home-thermometer"
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_raumtemperatur",
+              "name": "Raumtemperatur",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_raumsoll",
+              "name": "Raumsoll",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_aussentemperatur_regelung",
+              "name": "Außentemperatur (gemittelt)",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_status",
+              "name": "Status",
+              "grid_options": {
+                "columns": 6
+              },
+              "icon": "mdi:radiator"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Steuerung",
+              "icon": "mdi:remote"
+            },
+            {
+              "type": "tile",
+              "entity": "select.heizung_betriebsart",
+              "name": "Betriebsart",
+              "icon": "mdi:radiator",
+              "features": [
+                {
+                  "type": "select-options"
+                }
+              ],
+              "grid_options": {
+                "columns": 12
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "number.heizung_korrektur_einstellen",
+              "name": "Korrektur Raumtemperatur",
+              "icon": "mdi:thermometer-plus",
+              "features": [
+                {
+                  "type": "numeric-input",
+                  "style": "buttons"
+                }
+              ],
+              "grid_options": {
+                "columns": 12
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "**Betriebsarten:** auto = Automatik, off = Aus/Frostschutz, setback = Absenkbetrieb, heat = Heizbetrieb, schedule = Zeitprogramm, party = Partymodus. Das Portal übernimmt Änderungen nach einigen Sekunden.",
+              "grid_options": {
+                "columns": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Verbrauch",
+              "icon": "mdi:meter-electric"
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_leistung",
+              "name": "Leistung",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_spreizung",
+              "name": "Spreizung",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_waermemenge",
+              "name": "Wärmemenge",
+              "grid_options": {
+                "columns": 6
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_volumen",
+              "name": "Volumen",
+              "grid_options": {
+                "columns": 6
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Heizzeiten",
+              "icon": "mdi:calendar-clock"
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.heizung_heizzeiten",
+              "name": "Heute",
+              "icon": "mdi:clock-outline",
+              "grid_options": {
+                "columns": 12
+              }
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": 12
+              },
+              "content": "{% set s = state_attr('sensor.heizung_heizzeiten', 'schedule') %}\n{% set tage = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'] %}\n{% if s %}\n| Tag | Zeitraum 1 | Zeitraum 2 | Zeitraum 3 |\n|---|---|---|---|\n{% for tag in tage if s.get(tag) -%}\n| {{ '**' ~ tag ~ '**' if loop.index0 == now().weekday() else tag }} |{% for p in s[tag] %} {{ p[0] ~ '–' ~ p[1] if p[0] != p[1] else '–' }} |{% endfor %}\n{% endfor %}\n\nHeizkreis: {{ state_attr('sensor.heizung_heizzeiten', 'schedule_circuit') }}, Stand: {{ state_attr('sensor.heizung_heizzeiten', 'schedule_updated') }}. Ein Zeitraum mit gleicher Von- und Bis-Zeit ist nicht belegt.\n{% else %}\nNoch keine Heizzeiten vorhanden.\n{% endif %}"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 3,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Verlauf",
+              "icon": "mdi:chart-line"
+            },
+            {
+              "type": "history-graph",
+              "title": "Temperaturen",
+              "hours_to_show": 48,
+              "entities": [
+                {
+                  "entity": "sensor.heizung_raumtemperatur",
+                  "name": "Raum"
+                },
+                {
+                  "entity": "sensor.heizung_raumsoll",
+                  "name": "Raumsoll"
+                },
+                {
+                  "entity": "sensor.heizung_aussentemperatur_regelung",
+                  "name": "Außen (gemittelt)"
+                }
+              ],
+              "grid_options": {
+                "columns": "full",
+                "rows": 5
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Leistung",
+              "hours_to_show": 48,
+              "entities": [
+                {
+                  "entity": "sensor.heizung_leistung",
+                  "name": "Leistung"
+                }
+              ],
+              "grid_options": {
+                "columns": "full",
+                "rows": 4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
