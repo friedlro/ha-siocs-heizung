@@ -66,8 +66,10 @@ EXTRACT_JS = """
     if (temps.length >= 2) {
       temps[0].e.setAttribute('data-ha', 'offset'); out.offset = temps[0].n;
       temps[1].e.setAttribute('data-ha', 'room_temp'); out.room_temp = temps[1].n;
+      // Klickbar ist nur das Statuswort (z.B. "Aus/FS"), nicht die "MANUELL-..."-Zeile darueber.
+      const STATUS = /^(Aus\\/FS|Frostschutz|Heizen|Restw.rme|Absenkung|WW-Nachrang|Sperre|\\* Handbetrieb \\*|Ausheizen|0-10V Vorgabe|K.hlen)$/;
       const modeEl = leaves.filter(l => l.x > ref.x - 40 && l.x < ref.x + 200 && l.y > temps[1].y + 40
-                                        && l.y < temps[1].y + 250 && l.t.length > 2)
+                                        && l.y < temps[1].y + 250 && STATUS.test(l.t))
                            .sort((a, b) => a.y - b.y)[0];
       if (modeEl) { modeEl.e.setAttribute('data-ha', 'mode'); out.mode_status = modeEl.t; }
     }
