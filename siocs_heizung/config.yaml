@@ -1,5 +1,5 @@
 name: SIOCS Heizung
-version: "0.1.12"
+version: "0.1.13"
 slug: siocs_heizung
 description: Liest und steuert die Fernwaerme-Heizung ueber das SIOCS-Webportal
 arch:
