@@ -1,0 +1,20 @@
+name: SIOCS Heizung
+version: "0.1.0"
+slug: siocs_heizung
+description: Liest und steuert die Fernwaerme-Heizung ueber das SIOCS-Webportal
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+options:
+  url: "https://leibnitz.siocs.eu/"
+  username: ""
+  password: ""
+  poll_seconds: 60
+schema:
+  url: str
+  username: str
+  password: password
+  poll_seconds: int(30,3600)
