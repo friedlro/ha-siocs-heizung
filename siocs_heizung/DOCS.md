@@ -110,7 +110,7 @@ Typische Stolperfallen:
 
 ## Betriebsarten und Korrektur
 
-| Wert | Eintrag im Portal | Wirkung |
+| Wert | Eintrag im Portal | Bedeutung (nach Portal-Bezeichnung) |
 |---|---|---|
 | `auto` | Wahlschalter (Automatik) | Normalbetrieb nach Zeitprogramm und Außentemperatur |
 | `off` | MANUELL-AUS/FS | Heizung aus, Frostschutz |
@@ -121,7 +121,7 @@ Typische Stolperfallen:
 
 Manuelle Betriebsarten bleiben aktiv, bis du `auto` wählst. Das Portal bietet weitere Handbetriebe (Pumpe/Mischer) an; die App setzt sie nicht.
 
-**Korrektur:** Die Raumtemperatur-Korrektur der Fernbedienung (Anzeige oben im Thermostat). Die App begrenzt sie auf −5 bis +5 K. Sie verschiebt den Raumsoll, bei 22,0 °C Basis und +0,3 K zeigt das Portal 22,3 °C.
+**Korrektur:** Die Raumtemperatur-Korrektur der Fernbedienung (Anzeige oben im Thermostat). Die App begrenzt sie auf −5 bis +5 K. Sie verschiebt den Raumsoll: Bei einem Raumsoll von 22,5 °C und einer Korrektur von +0,3 K zeigt das Portal 22,8 °C.
 
 ## Heizzeiten
 
@@ -180,7 +180,7 @@ Zur Analyse hilft `/debug` und das Protokoll. Das Portal im eigenen Browser öff
 
 ## Bekannte Grenzen
 
-- Nur an einer Anlage entwickelt und getestet (Regler MR-12, Heizkreis HK0). Mehrere Heizkreise werden ausgelesen, gesteuert wird nur der auf der Stationsseite sichtbare.
+- Nur an einer Anlage entwickelt und getestet (Regler MR-12, Heizkreis HK0). Messwerte und Steuerung beziehen sich auf die Stationsseite; bei den Heizzeiten werden alle belegten Heizkreise gelesen.
 - `off` und `schedule` wurden nicht ausprobiert.
 - Das Portal braucht einige Sekunden für Änderungen; Sensoren zeigen den neuen Wert erst bei der nächsten Abfrage.
 - Ein geänderter Portal-Aufbau (Update des Betreibers) kann die Auslese stören.
