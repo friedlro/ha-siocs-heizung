@@ -46,6 +46,20 @@ rest:
         value_template: "{{ value_json.mode_status }}"
       - name: "Heizung Betriebsart gewaehlt"
         value_template: "{{ value_json.mode_selected }}"
+      - name: "Heizung Heizzeiten"
+        # Heute geltende Heizzeiten; die ganze Woche steht im Attribut "schedule".
+        value_template: >-
+          {% set tage = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'] %}
+          {% set d = (value_json.schedule or {}).get(tage[now().weekday()]) %}
+          {% if d %}
+          {% set ns = namespace(z=[]) %}
+          {% for p in d if p[0] != p[1] %}{% set ns.z = ns.z + [p[0] ~ '–' ~ p[1]] %}{% endfor %}
+          {{ ns.z | join(', ') if ns.z else 'keine' }}
+          {% else %}unknown{% endif %}
+        json_attributes:
+          - schedule
+          - schedule_circuit
+          - schedule_updated
 
 rest_command:
   siocs_set_mode:
