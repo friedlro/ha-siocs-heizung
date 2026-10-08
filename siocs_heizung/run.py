@@ -83,9 +83,11 @@ page = None
 async def login():
     await page.goto(URL, wait_until="load")
     await asyncio.sleep(3)  # Wt-JavaScript muss erst Handler anhaengen, sonst geht der Klick ins Leere
-    user_box = page.get_by_placeholder("Benutzername eingeben")
-    if await user_box.count():
-        pw_box = page.get_by_placeholder("Passwort eingeben")
+    # Die Felder haben keinen placeholder: erstes Textfeld, Passwortfeld, Button "Anmelden".
+    user_box = page.locator("input[type=text]:visible").first
+    pass_field = page.locator("input[type=password]:visible")
+    if await pass_field.count():
+        pw_box = pass_field.first
         for _ in range(3):
             # Wie ein Mensch tippen, damit Wt die Tastatur-Ereignisse mitbekommt.
             await user_box.click()
@@ -94,9 +96,9 @@ async def login():
             await pw_box.click()
             await pw_box.fill("")
             await pw_box.press_sequentially(PASSWORD, delay=40)
-            await page.get_by_text("Anmelden", exact=True).click()
+            await page.locator("button:has-text('Anmelden')").first.click()
             await asyncio.sleep(6)
-            if not await page.get_by_placeholder("Benutzername eingeben").count():
+            if not await pass_field.count():
                 break
             print("login: Formular noch sichtbar, neuer Versuch", flush=True)
     # Im DOM liegen versteckte Vorlagen mit demselben Text - auf ein sichtbares Element warten.
