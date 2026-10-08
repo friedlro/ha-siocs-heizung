@@ -232,7 +232,7 @@ async def main():
     global page
     pw = await async_playwright().start()
     browser = await pw.chromium.launch(args=["--no-sandbox"])
-    ctx = await browser.new_context(viewport={"width": 1280, "height": 900}, locale="de-AT")
+    ctx = await browser.new_context(viewport={"width": 731, "height": 698}, locale="de-AT")
     page = await ctx.new_page()
     asyncio.create_task(poller())
     app = web.Application()
