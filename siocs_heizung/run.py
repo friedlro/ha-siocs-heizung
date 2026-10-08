@@ -170,6 +170,15 @@ async def h_state(_):
     return web.json_response(state)
 
 
+async def h_debug(_):
+    """Zeigt, was der Browser im Container gerade sieht (zur Fehlersuche)."""
+    try:
+        text = await page.evaluate("() => document.body.innerText.slice(0, 1500)")
+        return web.json_response({"url": page.url, "title": await page.title(), "text": text})
+    except Exception as exc:  # noqa: BLE001
+        return web.json_response({"error": str(exc)})
+
+
 async def h_mode(request):
     body = await request.json()
     mode = body.get("mode")
@@ -201,7 +210,8 @@ async def main():
     page = await ctx.new_page()
     asyncio.create_task(poller())
     app = web.Application()
-    app.add_routes([web.get("/state", h_state), web.post("/mode", h_mode),
+    app.add_routes([web.get("/state", h_state), web.get("/debug", h_debug),
+                    web.post("/mode", h_mode),
                     web.post("/offset", h_offset)])
     runner = web.AppRunner(app)
     await runner.setup()
