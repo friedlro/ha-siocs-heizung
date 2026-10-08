@@ -85,15 +85,20 @@ async def login():
     await asyncio.sleep(3)  # Wt-JavaScript muss erst Handler anhaengen, sonst geht der Klick ins Leere
     user_box = page.get_by_placeholder("Benutzername eingeben")
     if await user_box.count():
-        for _ in range(4):
-            await user_box.fill(USER)
-            await page.get_by_placeholder("Passwort eingeben").fill(PASSWORD)
+        pw_box = page.get_by_placeholder("Passwort eingeben")
+        for _ in range(3):
+            # Wie ein Mensch tippen, damit Wt die Tastatur-Ereignisse mitbekommt.
+            await user_box.click()
+            await user_box.fill("")
+            await user_box.press_sequentially(USER, delay=40)
+            await pw_box.click()
+            await pw_box.fill("")
+            await pw_box.press_sequentially(PASSWORD, delay=40)
             await page.get_by_text("Anmelden", exact=True).click()
-            try:
-                await user_box.wait_for(state="hidden", timeout=10000)
+            await asyncio.sleep(6)
+            if not await page.get_by_placeholder("Benutzername eingeben").count():
                 break
-            except Exception:  # noqa: BLE001
-                print("login: Formular noch sichtbar, neuer Versuch", flush=True)
+            print("login: Formular noch sichtbar, neuer Versuch", flush=True)
     # Im DOM liegen versteckte Vorlagen mit demselben Text - auf ein sichtbares Element warten.
     try:
         await page.wait_for_function(
