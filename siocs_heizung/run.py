@@ -95,11 +95,16 @@ async def login():
             except Exception:  # noqa: BLE001
                 print("login: Formular noch sichtbar, neuer Versuch", flush=True)
     # Im DOM liegen versteckte Vorlagen mit demselben Text - auf ein sichtbares Element warten.
-    await page.wait_for_function(
-        "() => [...document.querySelectorAll('body *')].some(e => e.children.length === 0"
-        " && e.textContent.trim() === 'Raumsoll.:' && e.getBoundingClientRect().width > 0)",
-        timeout=60000,
-    )
+    try:
+        await page.wait_for_function(
+            "() => [...document.querySelectorAll('body *')].some(e => e.children.length === 0"
+            " && e.textContent.trim() === 'Raumsoll.:' && e.getBoundingClientRect().width > 0)",
+            timeout=60000,
+        )
+    except Exception:  # noqa: BLE001
+        text = await page.evaluate("() => document.body.innerText.slice(0, 1500)")
+        print("nach login:", page.url, repr(text), flush=True)
+        raise
 
 
 async def click_btn(name):
