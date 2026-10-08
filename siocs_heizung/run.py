@@ -35,6 +35,7 @@ LABELS = {
 # die Beschriftung in derselben Zeile gefunden, die Bedienelemente per data-ha markiert.
 EXTRACT_JS = """
 (labels) => {
+  document.querySelectorAll('[data-ha]').forEach(e => e.removeAttribute('data-ha'));
   const parse = t => {
     const m = t.match(/^(-?\\d+(?:[.,]\\d+)?)\\s*(°C|kW|kWh|m3|l\\/h|%)?$/);
     return m ? parseFloat(m[1].replace(',', '.')) : null;
