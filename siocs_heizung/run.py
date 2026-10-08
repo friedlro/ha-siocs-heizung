@@ -76,6 +76,8 @@ EXTRACT_JS = """
 """
 
 state = {"mode_selected": None, "updated": None, "ok": False}
+pending = {}
+wake = None
 lock = asyncio.Lock()
 page = None
 
@@ -211,15 +213,57 @@ async def h_debug(_):
         return web.json_response({"error": str(exc)})
 
 
+async def close_dialog():
+    btn = page.locator("button:visible", has_text=re.compile(r"^\s*abbrechen\s*$", re.I))
+    if await btn.count():
+        try:
+            await btn.last.click(timeout=3000)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def applier():
+    """Setzt nur den jeweils neuesten Wunsch um; schnelles Klicken in HA stapelt sich sonst."""
+    while True:
+        await wake.wait()
+        wake.clear()
+        while pending:
+            key = next(iter(pending))
+            value = pending.pop(key)
+            async with lock:
+                for attempt in range(3):
+                    try:
+                        await poll_once()  # markiert die Bedienelemente neu (Wt baut sie um)
+                        if key == "mode":
+                            await set_mode(value)
+                        else:
+                            await set_offset(value)
+                        break
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"setzen fehlgeschlagen ({key}={value}, Versuch {attempt + 1}): {exc}",
+                              flush=True)
+                        await close_dialog()
+                        if attempt == 1:
+                            try:
+                                await login()
+                            except Exception as exc2:  # noqa: BLE001
+                                print("login fehler:", exc2, flush=True)
+                await asyncio.sleep(4)
+                try:
+                    await poll_once()
+                except Exception as exc:  # noqa: BLE001
+                    print("poll nach setzen:", exc, flush=True)
+
+
 async def h_mode(request):
     body = await request.json()
     mode = body.get("mode")
     if mode not in MODES:
         return web.json_response({"error": f"mode muss in {list(MODES)} liegen"}, status=400)
-    async with lock:
-        await set_mode(mode)
-        await poll_once()
-    return web.json_response(state)
+    state["mode_selected"] = mode  # sofort anzeigen, das Portal zieht in wenigen Sekunden nach
+    pending["mode"] = mode
+    wake.set()
+    return web.json_response({"accepted": True, "mode": mode})
 
 
 async def h_offset(request):
@@ -227,20 +271,21 @@ async def h_offset(request):
     value = float(body["value"])
     if not -5.0 <= value <= 5.0:
         return web.json_response({"error": "value muss zwischen -5 und 5 liegen"}, status=400)
-    async with lock:
-        await set_offset(value)
-        await asyncio.sleep(2)
-        await poll_once()
-    return web.json_response(state)
+    state["offset"] = round(value, 1)
+    pending["offset"] = round(value, 1)
+    wake.set()
+    return web.json_response({"accepted": True, "value": round(value, 1)})
 
 
 async def main():
-    global page
+    global page, wake
+    wake = asyncio.Event()
     pw = await async_playwright().start()
     browser = await pw.chromium.launch(args=["--no-sandbox"])
     ctx = await browser.new_context(viewport={"width": 731, "height": 698}, locale="de-AT")
     page = await ctx.new_page()
     asyncio.create_task(poller())
+    asyncio.create_task(applier())
     app = web.Application()
     app.add_routes([web.get("/state", h_state), web.get("/debug", h_debug),
                     web.post("/mode", h_mode),
