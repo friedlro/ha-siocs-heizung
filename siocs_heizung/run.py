@@ -191,7 +191,14 @@ async def h_debug(_):
     """Zeigt, was der Browser im Container gerade sieht (zur Fehlersuche)."""
     try:
         text = await page.evaluate("() => document.body.innerText.slice(0, 1500)")
-        return web.json_response({"url": page.url, "title": await page.title(), "text": text})
+        fields = await page.evaluate(
+            "() => [...document.querySelectorAll('input,button,select')].map(e => ({"
+            "tag: e.tagName, type: e.type, id: e.id, name: e.name, cls: e.className.toString().slice(0, 40),"
+            "ph: e.placeholder, aria: e.getAttribute('aria-label'), txt: e.textContent.trim().slice(0, 30),"
+            "vis: e.getBoundingClientRect().width > 0})).slice(0, 40)"
+        )
+        return web.json_response({"url": page.url, "title": await page.title(), "text": text,
+                                  "fields": fields})
     except Exception as exc:  # noqa: BLE001
         return web.json_response({"error": str(exc)})
 
