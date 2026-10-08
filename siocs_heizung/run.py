@@ -13,6 +13,9 @@ from aiohttp import web
 from playwright.async_api import async_playwright
 
 opts = json.load(open("/data/options.json"))
+for key in ("url", "username", "password"):
+    if not str(opts.get(key, "")).strip():
+        raise SystemExit(f"Bitte '{key}' in den App-Optionen eintragen (Einstellungen > Apps > SIOCS Heizung > Konfiguration).")
 URL = opts["url"].rstrip("/") + "/"
 USER = opts["username"]
 PASSWORD = opts["password"]
