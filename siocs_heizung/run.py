@@ -59,13 +59,13 @@ EXTRACT_JS = """
   }
   const ref = leaves.find(l => l.t === 'Raumsoll.:');
   if (ref) {
-    const temps = leaves.filter(l => l.t.endsWith('°C') && l.n !== null && l.x > 60 && l.x < 260
+    const temps = leaves.filter(l => l.t.endsWith('°C') && l.n !== null && l.x > ref.x - 40 && l.x < ref.x + 200
                                      && l.y > ref.y + 20 && l.y < ref.y + 200)
                         .sort((a, b) => a.y - b.y);
     if (temps.length >= 2) {
       temps[0].e.setAttribute('data-ha', 'offset'); out.offset = temps[0].n;
       temps[1].e.setAttribute('data-ha', 'room_temp'); out.room_temp = temps[1].n;
-      const modeEl = leaves.filter(l => l.x > 60 && l.x < 260 && l.y > temps[1].y + 40
+      const modeEl = leaves.filter(l => l.x > ref.x - 40 && l.x < ref.x + 200 && l.y > temps[1].y + 40
                                         && l.y < temps[1].y + 250 && l.t.length > 2)
                            .sort((a, b) => a.y - b.y)[0];
       if (modeEl) { modeEl.e.setAttribute('data-ha', 'mode'); out.mode_status = modeEl.t; }
@@ -130,8 +130,14 @@ async def read_mode_selected():
 
 
 async def poll_once(read_mode=False):
-    data = await page.evaluate(EXTRACT_JS, LABELS)
+    data = {}
+    for _ in range(10):  # das Portal baut die Seite schrittweise auf
+        data = await page.evaluate(EXTRACT_JS, LABELS)
+        if "room_temp" in data:
+            break
+        await asyncio.sleep(1)
     if "room_temp" not in data:
+        print("auslese unvollstaendig:", data, flush=True)
         raise RuntimeError("Werte nicht gefunden - Sitzung abgelaufen?")
     state.update(data)
     state["updated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
