@@ -184,4 +184,4 @@ Zur Analyse hilft `/debug` und das Protokoll. Das Portal im eigenen Browser öff
 - `off` und `schedule` wurden nicht ausprobiert.
 - Das Portal braucht einige Sekunden für Änderungen; Sensoren zeigen den neuen Wert erst bei der nächsten Abfrage.
 - Ein geänderter Portal-Aufbau (Update des Betreibers) kann die Auslese stören.
-- Keine Lizenz festgelegt.
+- Lizenz: MIT, siehe die Datei LICENSE im Repository.
