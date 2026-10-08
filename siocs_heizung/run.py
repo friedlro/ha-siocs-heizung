@@ -81,6 +81,48 @@ EXTRACT_JS = """
 }
 """
 
+# Heizzeiten: Seite HEIZZEITEN, je Heizkreis 7 Wochentage mit bis zu 3 Zeitraeumen (von/bis).
+SCHEDULE_READY_JS = """
+() => [...document.querySelectorAll('body *')].some(e => e.children.length === 0
+  && e.textContent.trim() === 'Heizzeiten' && e.getBoundingClientRect().width > 0)
+"""
+
+SCHEDULE_JS = """
+() => {
+  const DAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+  const leaves = [...document.querySelectorAll('body *')]
+    .filter(e => e.children.length === 0 && e.textContent.trim()
+                 && e.getBoundingClientRect().width > 0)
+    .map(e => { const r = e.getBoundingClientRect(); return {t: e.textContent.trim(), x: r.x, y: r.y}; });
+  const isTime = t => t.length >= 4 && t.length <= 5 && t.charAt(t.length - 3) === ':' && !isNaN(parseInt(t));
+  const hks = leaves.filter(l => /^HK[0-9]/.test(l.t));
+  const out = {};
+  for (const h of hks) {
+    const left = h.x < 400;
+    const below = hks.filter(o => (o.x < 400) === left && o.y > h.y).map(o => o.y);
+    const yEnd = below.length ? Math.min(...below) - 5 : h.y + 170;
+    const times = leaves.filter(l => isTime(l.t) && l.y >= h.y - 5 && l.y < yEnd
+                                     && (left ? l.x < 590 : l.x >= 600))
+                        .sort((a, b) => a.y - b.y);
+    const rows = [];
+    for (const l of times) {
+      const last = rows[rows.length - 1];
+      if (last && Math.abs(l.y - last.y) < 8) last.items.push(l); else rows.push({y: l.y, items: [l]});
+    }
+    if (!rows.length) continue;
+    const days = {};
+    rows.slice(0, 7).forEach((row, i) => {
+      const ts = row.items.sort((a, b) => a.x - b.x).map(l => l.t);
+      const pairs = [];
+      for (let j = 0; j + 1 < ts.length; j += 2) pairs.push([ts[j], ts[j + 1]]);
+      days[DAYS[i]] = pairs;
+    });
+    out[h.t.slice(0, 3)] = {name: h.t, days};
+  }
+  return out;
+}
+"""
+
 state = {"mode_selected": None, "updated": None, "ok": False}
 pending = {}
 wake = None
@@ -158,8 +200,29 @@ async def poll_once(read_mode=False):
             await close_dialog()
 
 
+async def read_schedule():
+    """Oeffnet die Seite HEIZZEITEN, liest die Zeiten und kehrt zur Stationsseite zurueck."""
+    try:
+        btn = page.locator("button:visible", has_text=re.compile(r"^\s*HEIZZEITEN\s*$", re.I))
+        await btn.first.click(timeout=15000)
+        await page.wait_for_function(SCHEDULE_READY_JS, timeout=30000)
+        await asyncio.sleep(2)
+        data = await page.evaluate(SCHEDULE_JS)
+        if data:
+            first = next(iter(data.values()))
+            state["schedule_all"] = data
+            state["schedule"] = first["days"]
+            state["schedule_circuit"] = first["name"]
+            state["schedule_updated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            print("heizzeiten: keine Zeiten gefunden", flush=True)
+    finally:
+        await login()  # zurueck zur Stationsseite
+
+
 async def poller():
     last_mode_read = 0
+    last_schedule = 0
     last_reload = 0  # erster Durchlauf meldet sich an
     while True:
         async with lock:
@@ -171,6 +234,12 @@ async def poller():
                 await poll_once(read_mode=due)
                 if due:
                     last_mode_read = time.time()
+                if time.time() - last_schedule > 21600:  # alle 6 Stunden
+                    last_schedule = time.time()
+                    try:
+                        await read_schedule()
+                    except Exception as exc:  # noqa: BLE001
+                        print("heizzeiten lesen fehlgeschlagen:", exc, flush=True)
             except Exception as exc:  # noqa: BLE001
                 state["ok"] = False
                 print("poll fehler:", exc, flush=True)
