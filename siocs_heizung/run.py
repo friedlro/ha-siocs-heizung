@@ -127,7 +127,7 @@ async def read_mode_selected():
     """Oeffnet den Auswahl-Dialog, liest die gewaehlte Betriebsart, bricht ab."""
     await page.locator("[data-ha=mode]").click()
     sel = page.locator("select:visible").last
-    await sel.wait_for(state="visible", timeout=10000)
+    await sel.wait_for(state="visible", timeout=25000)
     value = await sel.evaluate("s => s.value")
     await click_btn("abbrechen")
     await page.locator("select:visible").last.wait_for(state="hidden", timeout=10000)
@@ -148,7 +148,11 @@ async def poll_once(read_mode=False):
     state["updated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     state["ok"] = True
     if read_mode:
-        await read_mode_selected()
+        try:
+            await read_mode_selected()
+        except Exception as exc:  # noqa: BLE001
+            print("modus lesen fehlgeschlagen:", exc, flush=True)
+            await close_dialog()
 
 
 async def poller():
@@ -178,7 +182,7 @@ async def poller():
 async def set_mode(mode):
     await page.locator("[data-ha=mode]").click()
     sel = page.locator("select:visible").last
-    await sel.wait_for(state="visible", timeout=10000)
+    await sel.wait_for(state="visible", timeout=25000)
     await sel.select_option(value=MODES[mode])
     await click_btn("ok")
     await page.locator("select:visible").last.wait_for(state="hidden", timeout=10000)
