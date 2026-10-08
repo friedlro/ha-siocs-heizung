@@ -1,5 +1,6 @@
 # In configuration.yaml einfuegen (File editor), danach Konfiguration pruefen + HA neu starten.
-# HOST unten (local-siocs-heizung) ggf. durch den echten Hostnamen der App ersetzen.
+# HOST unten (local-siocs-heizung) durch den Hostnamen der App ersetzen, bei Installation
+# aus dem GitHub-Repo z.B. 55ec2b33-siocs-heizung (steht in den App-Infos).
 
 rest:
   - resource: http://local-siocs-heizung:8099/state
@@ -64,7 +65,8 @@ template:
   - select:
       - name: "Heizung Betriebsart"
         unique_id: siocs_heizung_betriebsart
-        options: [auto, off, setback, heat, schedule, party]
+        # Als Template-Text angeben: ein nacktes off liest YAML sonst als false.
+        options: "{{ ['auto', 'off', 'setback', 'heat', 'schedule', 'party'] }}"
         state: "{{ states('sensor.heizung_betriebsart_gewaehlt') }}"
         select_option:
           - action: rest_command.siocs_set_mode
